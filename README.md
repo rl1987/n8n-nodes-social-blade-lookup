@@ -1,0 +1,119 @@
+# n8n-nodes-social-blade-lookup
+
+An [n8n](https://n8n.io/) community node that looks up Social Blade statistics, history and growth for YouTube, TikTok, Instagram and Twitch accounts. It is backed by the [Social Blade Lookup](https://apify.com/rl1987/social-blade-lookup) Actor on [Apify](https://apify.com) and bills per event, so there are no subscriptions and no minimums.
+
+[Installation](#installation) · [Credentials](#credentials) · [Operations](#operations) · [Output](#output) · [Example workflows](#example-workflows) · [Pricing](#pricing) · [Resources](#resources)
+
+## What it does
+
+Give the node a handle, platform ID, profile URL, or Social Blade URL for one or more accounts, and it returns Social Blade's headline metrics, daily history, and multi-window growth deltas for each one. It resolves handles/URLs automatically, mixes platforms in a single run when the query URL identifies its own platform, and works as an **AI Agent tool**, so an agent can answer questions like "how many subscribers does this channel have?" on demand. Good for **creator research**, **competitor benchmarking**, and **growth tracking** across YouTube, TikTok, Instagram, and Twitch.
+
+- Look up by handle, platform ID, profile URL, or Social Blade URL
+- Profile mode resolves the account and returns profile, history, and growth in one call
+- Search mode finds matching accounts for a term
+- Choose how much data to return per result: Simplified, Raw, or Selected Fields
+
+## Installation
+
+Follow the n8n [community nodes installation guide](https://docs.n8n.io/integrations/community-nodes/installation/):
+
+1. In n8n, open **Settings > Community Nodes**.
+2. Select **Install**.
+3. Enter `n8n-nodes-social-blade-lookup` as the npm package name.
+4. Agree to the risks of using community nodes, then select **Install**.
+
+After it installs, the **Social Blade Lookup** node appears in the nodes panel.
+
+> n8n Cloud only allows verified community nodes. Until this node is verified, install it on a self-hosted n8n instance.
+
+## Credentials
+
+You need a free [Apify account](https://apify.com) and an API token.
+
+1. Sign in to the [Apify Console](https://console.apify.com).
+2. Open **Settings > Integrations** and copy your **Personal API token**.
+3. In n8n, create a new **Apify API** credential and paste the token.
+4. Use the credential's **Test** button to confirm it works.
+
+The node also supports **Apify OAuth2** if you prefer to connect that way.
+
+## Operations
+
+**Account > Lookup** returns Social Blade data for one or more accounts.
+
+| Parameter | Description |
+| --- | --- |
+| Platform | The social platform to look up: YouTube, TikTok, Instagram, or Twitch. A query URL that identifies its own platform overrides this field. |
+| Handles / IDs / Profile URLs | One entry per account: a handle, a platform ID, a profile URL, or a Social Blade URL. One per line (or comma-separated). |
+| Result Type | `profile` (recommended) resolves the account and returns profile + history + growth in one call; `search` finds matching accounts for a term; `user`, `history`, and `growth` need a resolved platform ID. |
+| Include History (Profile Mode) | Whether to include the daily history section when Result Type is Profile. |
+| Include Growth (Profile Mode) | Whether to include the multi-window growth section when Result Type is Profile. |
+| History Limit (Days) | Number of daily data points to fetch for the History and Profile result types. |
+| Output | How much data to return: Simplified, Raw, or Selected Fields. |
+
+## Output
+
+Each account is returned as its own n8n item. The **Output** parameter lets you choose how much to return:
+
+- **Simplified** (default): `platform`, `query`, `username`, `displayName`, `followers`, `subscribers`, `sbGrade`, `scrapedAt`. This mode is also used automatically when the node runs as an AI Agent tool, to keep responses small.
+- **Raw**: every field the API returns for each account, using the original field names below.
+- **Selected Fields**: pick exactly which fields to include.
+
+### Fields (Raw and Selected Fields)
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `platform` | string | The resolved platform: `youtube`, `tiktok`, `instagram`, or `twitch` |
+| `query` | string | The original query you supplied |
+| `resultType` | string | The result type that was fetched |
+| `username` | string | Account username/handle |
+| `displayName` | string | Account display name |
+| `avatar` | string | Avatar image URL |
+| `sbGrade` | string | Social Blade grade, for example `A+` |
+| `followers` | number | Follower count (TikTok/Instagram/Twitch) |
+| `subscribers` | number | Subscriber count (YouTube) |
+| `views` | number | Total view count |
+| `uploads` | number | Total upload/video count |
+| `country` | string | Account's country |
+| `category` | string | Social Blade category |
+| `createdAt` | string | Account creation date |
+| `madeForKids` | boolean | Whether the account is flagged as made for kids |
+| `ranks` | object | Social Blade rank breakdown (SB rank, country, category, followers, views, etc.) |
+| `history` | array | Daily historical data points (profile/history result types) |
+| `growth` | object | Multi-window growth deltas (profile/growth result types) |
+| `user` | object | Full profile/summary object (user result type) |
+| `scrapedAt` | string | Timestamp when the data was scraped |
+
+## Example workflows
+
+### 1. Track a creator's follower growth weekly
+
+1. **Schedule Trigger** (weekly).
+2. **Social Blade Lookup**: Platform `YouTube`, Handles `https://www.youtube.com/@mrbeast`.
+3. **Google Sheets**: append `followers`, `subscribers`, and `scrapedAt` to a tracking sheet.
+
+### 2. Compare Social Blade grades across competitors
+
+1. **Social Blade Lookup**: Handles listing several competitor channel URLs, one per line.
+2. **Sort**: order results by `sbGrade` or `followers`.
+3. **Slack**: post a leaderboard summary.
+
+### 3. Let an AI Agent check a channel's stats
+
+1. **AI Agent** node.
+2. Attach **Social Blade Lookup** as a tool.
+3. Ask "How many subscribers does this YouTube channel have?" The agent calls the node (in Simplified mode) and returns the account's stats.
+
+## Pricing
+
+This node calls the [Social Blade Lookup](https://apify.com/rl1987/social-blade-lookup) Actor on Apify, which is billed **pay-per-event**: $0.01 per profile/search lookup, $0.01 for history data, and $0.01 for growth data (charged independently per query, when returned). No subscription. Apify also includes a free monthly usage tier that covers typical volumes. See the [Actor page](https://apify.com/rl1987/social-blade-lookup) for current rates.
+
+## Resources
+
+- [Social Blade Lookup on Apify](https://apify.com/rl1987/social-blade-lookup)
+- [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
+- [Apify n8n integration guide](https://docs.apify.com/platform/integrations/n8n)
+
+## License
+
+[MIT](LICENSE.md)

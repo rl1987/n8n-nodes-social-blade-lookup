@@ -1,0 +1,71 @@
+{
+	"name": "n8n-nodes-social-blade-lookup",
+	"version": "0.1.0",
+	"description": "Look up Social Blade statistics, history and growth for YouTube, TikTok, Instagram and Twitch accounts. Apify-backed n8n community node, pay-per-event, usable as an AI agent tool.",
+	"keywords": [
+		"n8n-community-node-package",
+		"n8n-nodes",
+		"n8n",
+		"social-blade",
+		"youtube",
+		"tiktok",
+		"instagram",
+		"twitch",
+		"apify",
+		"ai-tool"
+	],
+	"license": "MIT",
+	"author": {
+		"name": "Rimantas",
+		"email": "rimantas@keyspace.lt"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/rl1987/n8n-nodes-social-blade-lookup.git"
+	},
+	"homepage": "https://github.com/rl1987/n8n-nodes-social-blade-lookup#readme",
+	"bugs": {
+		"url": "https://github.com/rl1987/n8n-nodes-social-blade-lookup/issues"
+	},
+	"engines": {
+		"node": ">=18.10"
+	},
+	"packageManager": "npm@10.8.2",
+	"main": "index.js",
+	"scripts": {
+		"build": "n8n-node build",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"credentials": [
+			"dist/credentials/ApifyApi.credentials.js",
+			"dist/credentials/ApifyOAuth2Api.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/ApifySocialBladeLookup/ApifySocialBladeLookup.node.js"
+		]
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "0.32.1",
+		"@types/jest": "^29.5.14",
+		"@types/node": "^24.0.1",
+		"chalk": "^5.6.0",
+		"eslint": "9.29.0",
+		"glob": "^11.0.3",
+		"gulp": "^4.0.2",
+		"jest": "^29.7.0",
+		"nock": "^14.0.5",
+		"prettier": "^3.6.2",
+		"ts-jest": "^29.3.2",
+		"typescript": "5.9.2"
+	}
+}

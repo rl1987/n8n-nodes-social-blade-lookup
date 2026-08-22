@@ -1,0 +1,30 @@
+{
+	"node": "n8n-nodes-social-blade-lookup",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": [
+		"Social Media Automation"
+	],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://docs.apify.com/platform/integrations/n8n"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://apify.com/rl1987/social-blade-lookup"
+			}
+		]
+	},
+	"alias": [
+		"social blade",
+		"youtube",
+		"tiktok",
+		"instagram",
+		"twitch",
+		"analytics",
+		"influencer",
+		"follower count"
+	]
+}
