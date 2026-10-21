@@ -72,17 +72,51 @@ function shapeItem(
 		}
 		return picked;
 	}
-	// simplified
-	return {
+	// simplified: the identity columns every mode fills, plus whatever this row actually
+	// carries. The previous fixed, profile-shaped list returned mostly nulls for history,
+	// growth and search rows - the same "one shape for every mode" defect the Actor's own
+	// dataset views had (rl1987/apify-socialblade-lookup#10). The sections are summarised
+	// rather than inlined, because this shape is also what the node hands an AI agent;
+	// use Raw or Selected Fields to get the series itself.
+	const simplified: Record<string, any> = {
 		platform: item.platform,
+		resultType: item.resultType,
 		query: item.query,
-		username: item.username,
-		displayName: item.displayName,
-		followers: item.followers,
-		subscribers: item.subscribers,
-		sbGrade: item.sbGrade,
 		scrapedAt: item.scrapedAt,
 	};
+	if (item.id != null) {
+		simplified.id = item.id;
+	}
+	if (item.error != null) {
+		simplified.error = item.error;
+	}
+	for (const key of [
+		'username',
+		'displayName',
+		'verified',
+		'subscribers',
+		'followers',
+		'views',
+		'likes',
+		'uploads',
+		'engagementRate',
+		'sbGrade',
+		'rankSb',
+	]) {
+		if (key in item) {
+			simplified[key] = item[key];
+		}
+	}
+	if ('history' in item) {
+		simplified.historyDays = Array.isArray(item.history) ? item.history.length : 0;
+	}
+	if ('growth' in item) {
+		simplified.growthMetrics = item.growth ? Object.keys(item.growth) : [];
+	}
+	if ('results' in item) {
+		simplified.resultCount = Array.isArray(item.results) ? item.results.length : 0;
+	}
+	return simplified;
 }
 
 export async function runActor(this: IExecuteFunctions, i: number): Promise<INodeExecutionData[]> {

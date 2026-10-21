@@ -22,13 +22,16 @@ export function buildActorInput(
 ): Record<string, any> {
 	const queriesRaw = context.getNodeParameter('queries', itemIndex, '') as string;
 
+	// `mode` names the data layers explicitly, and each layer is charged separately. The
+	// node used to send only the Actor's deprecated resultType/includeHistory/includeGrowth
+	// inputs, which the Actor honours by BUNDLING all three layers - so every workflow paid
+	// for history and growth even when it only wanted a profile snapshot, and the cheap
+	// single-layer modes were unreachable from n8n.
 	const input: Record<string, any> = {
 		...defaultInput,
 		platform: context.getNodeParameter('platform', itemIndex, 'youtube'),
 		queries: toList(queriesRaw),
-		resultType: context.getNodeParameter('resultType', itemIndex, 'profile'),
-		includeHistory: context.getNodeParameter('includeHistory', itemIndex, true),
-		includeGrowth: context.getNodeParameter('includeGrowth', itemIndex, true),
+		mode: context.getNodeParameter('mode', itemIndex, 'profile'),
 		historyLimit: context.getNodeParameter('historyLimit', itemIndex, 30),
 	};
 
@@ -101,36 +104,23 @@ const actorProperties: INodeProperties[] = [
 		displayOptions: { show: { resource: ['account'], operation: ['lookup'] } },
 	},
 	{
-		displayName: 'Result Type',
-		name: 'resultType',
+		displayName: 'Mode',
+		name: 'mode',
 		type: 'options',
 		options: [
-			{ name: 'Growth', value: 'growth', description: 'Multi-window growth deltas. Needs a resolved platform ID.' },
-			{ name: 'History', value: 'history', description: 'Daily historical data points. Needs a resolved platform ID.' },
-			{ name: 'Profile', value: 'profile', description: 'Resolve + fetch profile, history and growth in one call (recommended)' },
-			{ name: 'Search', value: 'search', description: 'Matching accounts for a search term' },
-			{ name: 'User', value: 'user', description: 'Profile/summary stats only. Needs a resolved platform ID.' },
+			{ name: 'Everything (Profile + History + Growth)', value: 'all', description: 'All three layers. Charges three events per account.' },
+			{ name: 'Growth Only', value: 'growth', description: 'Multi-window growth deltas. Accepts a handle, ID or URL. One event.' },
+			{ name: 'History Only', value: 'history', description: 'Daily history rows (about 31 days). Accepts a handle, ID or URL. One event.' },
+			{ name: 'Profile + Growth', value: 'profile-growth', description: 'Snapshot plus growth windows. Two events.' },
+			{ name: 'Profile + History', value: 'profile-history', description: 'Snapshot plus the daily series. Two events.' },
+			{ name: 'Profile Only', value: 'profile', description: 'Stats snapshot only — the cheapest single-account lookup. One event.' },
+			{ name: 'Search', value: 'search', description: 'Matching accounts for a search term. One event.' },
+			{ name: 'User Record', value: 'user', description: 'Profile summary by platform ID. One event.' },
 		],
 		default: 'profile',
 		description:
-			'Profile = resolve + fetch profile+history+growth in one call (recommended). Search = matching accounts for a term. User/history/growth need a resolved platform ID.',
+			'Which data layers to fetch. Each layer is charged separately, so pick only what you need — "Everything" charges three events per account where "Profile Only" charges one.',
 		displayOptions: { show: { resource: ['account'], operation: ['lookup'] } },
-	},
-	{
-		displayName: 'Include History (Profile Mode)',
-		name: 'includeHistory',
-		type: 'boolean',
-		default: true,
-		description: 'Whether to include the daily history section when Result Type is Profile',
-		displayOptions: { show: { resource: ['account'], operation: ['lookup'], resultType: ['profile'] } },
-	},
-	{
-		displayName: 'Include Growth (Profile Mode)',
-		name: 'includeGrowth',
-		type: 'boolean',
-		default: true,
-		description: 'Whether to include the multi-window growth section when Result Type is Profile',
-		displayOptions: { show: { resource: ['account'], operation: ['lookup'], resultType: ['profile'] } },
 	},
 	{
 		displayName: 'History Limit (Days)',
@@ -138,9 +128,14 @@ const actorProperties: INodeProperties[] = [
 		type: 'number',
 		default: 30,
 		typeOptions: { minValue: 1 },
-		description: 'Number of daily data points to fetch for the History and Profile result types',
+		description:
+			'How many daily data points to fetch. Social Blade serves about 31 days to anonymous callers, so larger values return about 31 rows.',
 		displayOptions: {
-			show: { resource: ['account'], operation: ['lookup'], resultType: ['profile', 'history'] },
+			show: {
+				resource: ['account'],
+				operation: ['lookup'],
+				mode: ['profile-history', 'all', 'history'],
+			},
 		},
 	},
 ];
@@ -179,26 +174,46 @@ const outputProperties: INodeProperties[] = [
 		displayOptions: {
 			show: { resource: ['account'], operation: ['lookup'], output: ['selected'] },
 		},
+		// Mirrors the Actor's dataset schema as of 2026-10-21. `user` and `ranks` are gone:
+		// the upstream profile blob is no longer emitted and the ranks are flat columns.
 		options: [
+			{ name: 'Account ID', value: 'id' },
+			{ name: 'Average Comments', value: 'averageComments' },
+			{ name: 'Average Likes', value: 'averageLikes' },
 			{ name: 'Avatar', value: 'avatar' },
 			{ name: 'Category', value: 'category' },
 			{ name: 'Country', value: 'country' },
 			{ name: 'Created At', value: 'createdAt' },
 			{ name: 'Display Name', value: 'displayName' },
+			{ name: 'Engagement Rate', value: 'engagementRate' },
+			{ name: 'Error', value: 'error' },
 			{ name: 'Followers', value: 'followers' },
+			{ name: 'Following', value: 'following' },
 			{ name: 'Growth', value: 'growth' },
 			{ name: 'History', value: 'history' },
+			{ name: 'Likes', value: 'likes' },
+			{ name: 'Linked Socials', value: 'socials' },
 			{ name: 'Made for Kids', value: 'madeForKids' },
 			{ name: 'Platform', value: 'platform' },
 			{ name: 'Query', value: 'query' },
-			{ name: 'Ranks', value: 'ranks' },
+			{ name: 'Rank by Category', value: 'rankCategory' },
+			{ name: 'Rank by Country', value: 'rankCountry' },
+			{ name: 'Rank by Engagement Rate', value: 'rankEngagementRate' },
+			{ name: 'Rank by Followers', value: 'rankFollowers' },
+			{ name: 'Rank by Likes', value: 'rankLikes' },
+			{ name: 'Rank by Subscribers', value: 'rankSubscribers' },
+			{ name: 'Rank by Video Count', value: 'rankVideos' },
+			{ name: 'Rank by Views', value: 'rankViews' },
+			{ name: 'Rank Overall (SB)', value: 'rankSb' },
 			{ name: 'Result Type', value: 'resultType' },
 			{ name: 'SB Grade', value: 'sbGrade' },
 			{ name: 'Scraped At', value: 'scrapedAt' },
+			{ name: 'Search Results', value: 'results' },
+			{ name: 'Stats Hidden', value: 'statsHidden' },
 			{ name: 'Subscribers', value: 'subscribers' },
 			{ name: 'Uploads', value: 'uploads' },
-			{ name: 'User', value: 'user' },
 			{ name: 'Username', value: 'username' },
+			{ name: 'Verified', value: 'verified' },
 			{ name: 'Views', value: 'views' },
 		],
 		default: ['platform', 'query', 'username', 'displayName', 'followers', 'subscribers', 'sbGrade'],

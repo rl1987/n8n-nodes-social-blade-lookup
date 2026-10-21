@@ -45,17 +45,15 @@ The node also supports **Apify OAuth2** if you prefer to connect that way.
 | --- | --- |
 | Platform | The social platform to look up: YouTube, TikTok, Instagram, or Twitch. A query URL that identifies its own platform overrides this field. |
 | Handles / IDs / Profile URLs | One entry per account: a handle, a platform ID, a profile URL, or a Social Blade URL. One per line (or comma-separated). |
-| Result Type | `profile` (recommended) resolves the account and returns profile + history + growth in one call; `search` finds matching accounts for a term; `user`, `history`, and `growth` need a resolved platform ID. |
-| Include History (Profile Mode) | Whether to include the daily history section when Result Type is Profile. |
-| Include Growth (Profile Mode) | Whether to include the multi-window growth section when Result Type is Profile. |
-| History Limit (Days) | Number of daily data points to fetch for the History and Profile result types. |
+| Mode | Which data layers to fetch. Each layer is charged separately, so pick only what you need: **Profile Only** (one event) is the cheapest single-account lookup, **Everything** charges three. `History Only` and `Growth Only` accept a handle, ID or URL and resolve it for you at no extra charge. |
+| History Limit (Days) | How many daily data points to fetch. Social Blade serves about **31 days** to anonymous callers, so larger values return about 31 rows. |
 | Output | How much data to return: Simplified, Raw, or Selected Fields. |
 
 ## Output
 
 Each account is returned as its own n8n item. The **Output** parameter lets you choose how much to return:
 
-- **Simplified** (default): `platform`, `query`, `username`, `displayName`, `followers`, `subscribers`, `sbGrade`, `scrapedAt`. This mode is also used automatically when the node runs as an AI Agent tool, to keep responses small.
+- **Simplified** (default): the identity columns (`platform`, `resultType`, `query`, `id`, `scrapedAt`) plus whichever headline figures the chosen mode actually returns, and a count for each section it carries (`historyDays`, `growthMetrics`, `resultCount`) rather than the series itself. This mode is also used automatically when the node runs as an AI Agent tool, to keep responses small.
 - **Raw**: every field the API returns for each account, using the original field names below.
 - **Selected Fields**: pick exactly which fields to include.
 
@@ -72,17 +70,35 @@ Each account is returned as its own n8n item. The **Output** parameter lets you 
 | `sbGrade` | string | Social Blade grade, for example `A+` |
 | `followers` | number | Follower count (TikTok/Instagram/Twitch) |
 | `subscribers` | number | Subscriber count (YouTube) |
-| `views` | number | Total view count |
-| `uploads` | number | Total upload/video count |
-| `country` | string | Account's country |
-| `category` | string | Social Blade category |
-| `createdAt` | string | Account creation date |
+| `views` | number | Total view count (YouTube) |
+| `likes` | number | Total likes (TikTok) |
+| `uploads` | number | Published items — videos on YouTube/TikTok, posts on Instagram |
+| `following` | number | Accounts this one follows (TikTok/Instagram/Twitch) |
+| `verified` | boolean | Verification badge (TikTok/Twitch) |
+| `engagementRate`, `averageLikes`, `averageComments` | number | Engagement figures (Instagram) |
+| `country` | string | Account's country (YouTube) |
+| `category` | string | Social Blade category (YouTube) |
+| `createdAt` | string | Account creation date. Null on TikTok, where Social Blade returns an epoch artifact rather than a date |
 | `madeForKids` | boolean | Whether the account is flagged as made for kids |
-| `ranks` | object | Social Blade rank breakdown (SB rank, country, category, followers, views, etc.) |
-| `history` | array | Daily historical data points (profile/history result types) |
-| `growth` | object | Multi-window growth deltas (profile/growth result types) |
-| `user` | object | Full profile/summary object (user result type) |
+| `statsHidden` | boolean | Whether Social Blade is withholding this account's counts |
+| `socials` | array | URLs the creator links from their profile (plain strings) |
+| `rankSb`, `rankSubscribers`, `rankFollowers`, `rankViews`, `rankVideos`, `rankLikes`, `rankEngagementRate`, `rankCountry`, `rankCategory` | number | Social Blade league-table positions, one column each. Rank 1 is the top |
+| `id` | string | The platform's canonical account ID |
+| `error` | string | Why a query produced no data; null on successful rows |
+| `history` | array | Daily historical data points (profile/history modes) |
+| `growth` | object | Multi-window growth deltas (profile/growth modes) |
+| `results` | array | Matching accounts (search mode) |
 | `scrapedAt` | string | Timestamp when the data was scraped |
+
+Each mode returns only the fields it can fill, with an explicit `null` where Social Blade
+publishes nothing — so the item shape is stable across accounts within a run.
+
+> **Changed in 0.2.0.** The **Result Type** parameter and the two *Include…* toggles are
+> replaced by a single **Mode**, because the Actor's deprecated inputs bundle all three data
+> layers and charge for all three: a workflow that only wanted a profile snapshot was paying
+> three times over. Re-pick your mode after upgrading. The `user` object and the `ranks` object
+> are no longer returned — every scalar worth having is now its own column (see `rank…`,
+> `likes`, `verified`, `engagementRate`), and `socials` is a list of URL strings.
 
 ## Example workflows
 
