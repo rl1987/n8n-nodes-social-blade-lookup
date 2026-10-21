@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-social-blade-lookup",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Look up Social Blade statistics, history and growth for YouTube, TikTok, Instagram and Twitch accounts. Apify-backed n8n community node, pay-per-event, usable as an AI agent tool.",
   "keywords": [
     "n8n-community-node-package",

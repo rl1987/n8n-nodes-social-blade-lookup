@@ -100,7 +100,7 @@ const actorProperties: INodeProperties[] = [
 		default: 'https://www.youtube.com/@mrbeast',
 		placeholder: 'https://www.youtube.com/@mrbeast',
 		description:
-			'One entry per line (or comma-separated): a handle, a platform ID, a profile URL, or a Social Blade URL. A URL that identifies the platform overrides the Platform field.',
+			'One entry per line (or comma-separated): a handle, a platform ID, a profile URL (subdomains such as m.youtube.com included; the account is read from the start of the path, so a /video/ or /clips/ link still resolves) or a Social Blade URL. A URL that identifies the platform overrides the Platform field. Share links (youtu.be, vm.tiktok.com), video/post pages and hosts the Actor does not read are returned as an explanatory row and cost nothing.',
 		displayOptions: { show: { resource: ['account'], operation: ['lookup'] } },
 	},
 	{

@@ -44,7 +44,7 @@ The node also supports **Apify OAuth2** if you prefer to connect that way.
 | Parameter | Description |
 | --- | --- |
 | Platform | The social platform to look up: YouTube, TikTok, Instagram, or Twitch. A query URL that identifies its own platform overrides this field. |
-| Handles / IDs / Profile URLs | One entry per account: a handle, a platform ID, a profile URL, or a Social Blade URL. One per line (or comma-separated). |
+| Handles / IDs / Profile URLs | One entry per account: a handle, a platform ID, a profile URL or a Social Blade URL, one per line (or comma-separated). Subdomains such as `m.youtube.com` work, and the account is read from the start of the path so a `/video/` or `/clips/` link still resolves. Share links (`youtu.be`, `vm.tiktok.com`), video/post pages and unknown hosts come back as an explanatory row at no charge. |
 | Mode | Which data layers to fetch. Each layer is charged separately, so pick only what you need: **Profile Only** (one event) is the cheapest single-account lookup, **Everything** charges three. `History Only` and `Growth Only` accept a handle, ID or URL and resolve it for you at no extra charge. |
 | History Limit (Days) | How many daily data points to fetch. Social Blade serves about **31 days** to anonymous callers, so larger values return about 31 rows. |
 | Output | How much data to return: Simplified, Raw, or Selected Fields. |
